@@ -3,7 +3,7 @@ ramp-workflow
 osfclient
 
 # generic datascience
-numpy==1.25.2
+numpy==1.26
 matplotlib==3.7.2
 pandas==2.0.3
 scipy==1.11.1
