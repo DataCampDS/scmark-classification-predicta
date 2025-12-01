@@ -1,11 +1,10 @@
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import make_pipeline
 
 from sklearn.preprocessing import LabelEncoder
-from xgboost import XGBClassifier
+from sklearn.ensemble import GradientBoostingClassifier
 
 
 def _preprocess_X(X_sparse):
@@ -30,17 +29,13 @@ class Classifier(object):
         self.pipe = make_pipeline(
             StandardScaler(with_mean=True, with_std=True),
             PCA(n_components=25),
-            XGBClassifier(
+            GradientBoostingClassifier(
                 n_estimators=300,
-                max_depth=4,
                 learning_rate=0.05,
-                subsample=0.8,
-                colsample_bytree=0.8,
-                objective="multi:softprob",
-                eval_metric="mlogloss",
-                tree_method="hist",   # rapide et efficace
+                max_depth=4,        # profondeur des arbres de base
+                subsample=0.8,      # comme "subsample" de xgboost (stochastic gradient boosting)
                 random_state=42,
-            ),
+            )
         )
 
     def fit(self, X_sparse, y):
