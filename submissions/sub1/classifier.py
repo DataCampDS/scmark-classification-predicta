@@ -29,7 +29,7 @@ class Classifier(object):
         self.le = LabelEncoder()
         self.pipe = make_pipeline(
             StandardScaler(with_mean=True, with_std=True),
-            PCA(n_components=90),
+            PCA(n_components=25),
             XGBClassifier(
                 n_estimators=300,
                 max_depth=4,
