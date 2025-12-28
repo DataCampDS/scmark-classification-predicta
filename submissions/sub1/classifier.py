@@ -21,11 +21,24 @@ def select_hvg(X, n_genes=2000):
     idx = np.argsort(variances)[-n_genes:]
     return idx
 
+def _balance_classes(X_sparse, y):
+    unique_classes, counts = np.unique(y, return_counts=True)
+    min_count = counts.min()
+    idx_balanced = []
+
+    for cls in unique_classes:
+        idx_cls = np.where(y == cls)[0]
+        selected_idx = np.random.choice(idx_cls, size=min_count, replace=False)
+        idx_balanced.extend(selected_idx)
+
+    idx_balanced = np.array(sorted(idx_balanced))
+    return X_sparse[idx_balanced], y[idx_balanced]
+
 
 class Classifier(object):
     def __init__(self):
         # Use scikit-learn's pipeline
-        self.le = LabelEncoder()
+        #self.le = LabelEncoder()
         self.pipe = make_pipeline(
             StandardScaler(with_mean=True, with_std=True),
             PCA(n_components=25),
@@ -39,19 +52,18 @@ class Classifier(object):
         )
 
     def fit(self, X_sparse, y):
-        y_enc = self.le.fit_transform(y)
+        # Balance classes
+        X, y = _balance_classes(X_sparse, y)
+
         # Normalization
-        X = _preprocess_X(X_sparse)
+        X = _preprocess_X(X)
 
         # Reduction of the Noise
         self.hvg_idx_ = select_hvg(X, n_genes=2000)
         X = X[:, self.hvg_idx_]
 
-        self.pipe.fit(X, y_enc)
-        #self.classes_ = self.pipe.classes_
-        self.classes_ = self.le.classes_
-        
-        pass
+        self.pipe.fit(X, y)
+        self.classes_ = self.pipe.classes_  
 
     def predict_proba(self, X_sparse):
 
@@ -60,8 +72,3 @@ class Classifier(object):
         X = X[:, self.hvg_idx_]
 
         return self.pipe.predict_proba(X)
-
-    def predict(self, X_sparse):
-        proba = self.predict_proba(X_sparse)
-        y_enc = np.argmax(proba, axis=1)
-        return self.le.inverse_transform(y_enc)
